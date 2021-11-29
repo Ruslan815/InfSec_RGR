@@ -229,12 +229,12 @@ public class GraphColoring {
             System.out.println("****************");
 
             // Рандомим последовательность проверки рёбер
-            sequenceOfBobChecking = new int[E];
-            fillArrayByIndexes(sequenceOfBobChecking);
-            shuffleArray(sequenceOfBobChecking);
+            // sequenceOfBobChecking = new int[E];
+            // fillArrayByIndexes(sequenceOfBobChecking);
+            // shuffleArray(sequenceOfBobChecking);
 
             // Проверяем рёбра
-            for (int k : sequenceOfBobChecking) {
+            //for (int k : sequenceOfBobChecking) {
                 // Step 1
                 fillArrayByIndexes(shuffleArray);
                 shuffleArray(shuffleArray);
@@ -244,10 +244,11 @@ public class GraphColoring {
                 generateDataRSA();
 
                 // Step 5
+                int k = ThreadLocalRandom.current().nextInt(0, E);
                 if (!verifyEdge(k)) {
                     return;
                 }
-            }
+            //}
         }
     }
 }

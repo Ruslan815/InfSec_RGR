@@ -188,7 +188,7 @@ public class CryptographicLibrary {
     }
 
     public static void main(String[] args) {
-        System.out.println("fastExponentiationModulo: " + fastExponentiationModulo(5, 20, 7));
+        System.out.println("fastExponentiationModulo: " + fastExponentiationModulo(394888809, 81566503, 121554311));
         System.out.println("generalizedEuclidAlgorithm: " + Arrays.toString(generalizedEuclidAlgorithm(28, 19)));
         diffieHellman();
         System.out.println("babyStepGiantStep: " + babyStepGiantStep(5, 7, 4));

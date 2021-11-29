@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,6 +16,8 @@ public class GraphColoring {
     private static long[] C; // Secret key
     private static long[] D; // Public key
     private static long[] Z; // Public
+
+    private static int[] sequenceOfBobChecking;
 
     private static void readGraphFromFile(String filename) throws FileNotFoundException {
         try {
@@ -57,6 +57,12 @@ public class GraphColoring {
         }
     }
 
+    private static void fillArrayByIndexes(int[] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = i;
+        }
+    }
+
     private static void shuffleArray(int[] arr) {
         Random rnd = ThreadLocalRandom.current();
         for (int i = arr.length - 1; i > 0; i--) {
@@ -84,16 +90,17 @@ public class GraphColoring {
         }
     }
 
-    private static void generateR() {
+    private static void generateR(long N) {
         r = new long[V];
         for (int i = 0; i < V; i++) {
-            r[i] = ThreadLocalRandom.current().nextLong(Integer.MAX_VALUE >> 16, Integer.MAX_VALUE >> 2);
+            r[i] = ThreadLocalRandom.current().nextLong(0, N);
             int number = 0;
             switch (colors[i]) {
                 case "B" -> number = 1;
                 case "Y" -> number = 2;
             }
             r[i] = ((r[i] >> 2) << 2) | number;
+            //System.out.println("R: " + colors[i] + " : " + Long.toBinaryString(r[i]));
         }
     }
 
@@ -110,6 +117,11 @@ public class GraphColoring {
             while (!CryptographicLibrary.isPrime(++Q) || Q == P) ;
 
             long N = P * Q;
+
+            // Step 2
+            generateR(N);
+            // Step 2
+
             long Fi = (P - 1) * (Q - 1);
             long d = ThreadLocalRandom.current().nextLong(11, Integer.MAX_VALUE >> 16);
             while (CryptographicLibrary.generalizedEuclidAlgorithm(++d, Fi)[0] != 1 && d < Fi) ;
@@ -123,24 +135,24 @@ public class GraphColoring {
             GraphColoring.N[i] = N;
             GraphColoring.C[i] = c;
             GraphColoring.D[i] = d;
+
+            // Step 4
             GraphColoring.Z[i] = CryptographicLibrary.fastExponentiationModulo(GraphColoring.r[i], d, N);
+
+            /*System.out.println("P : " + P);
+            System.out.println("Q : " + Q);
+            System.out.println("N : " + N);
+            System.out.println("C : " + c);
+            System.out.println("D : " + d);
+            System.out.println("r: " + r[i]);
+            System.out.println("Z1: " + Z[i]);
+            long Z2 = CryptographicLibrary.fastExponentiationModulo(Z[i], c, N);
+            System.out.println("Z2: " + Z2);
+            System.out.println();*/
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        readGraphFromFile("Solution.txt");
-        // Step 1
-        shuffleArray(shuffleArray);
-        shuffleGraphColors();
-
-        // Step 2
-        generateR();
-
-        // Step 3, 4
-        generateDataRSA();
-
-        // Step 5
-        int edgeNumber = ThreadLocalRandom.current().nextInt(0, E);
+    private static boolean verifyEdge(int edgeNumber) {
         int firstVertexNumber = graph[edgeNumber][0];
         int secondVertexNumber = graph[edgeNumber][1];
         long firstC = C[firstVertexNumber];
@@ -150,13 +162,92 @@ public class GraphColoring {
 
         long firstNumber = firstZ & 3;
         long secondNumber = secondZ & 3;
+
+        System.out.println("Edge #" + edgeNumber);
+        System.out.println("Vertexes numbers: " + firstVertexNumber + " " + secondVertexNumber);
+        System.out.println("Calculated Rs: " + firstZ + " " + secondZ);
+        System.out.println("Calculated first 2 bits: " + firstNumber + " " + secondNumber);
+
         if (firstNumber == secondNumber) {
-            System.err.println("Граф не раскрашен!");
+            System.err.println("Алиса тебя обманывает!");
+            return false;
+        }
+        System.out.println("Успех.\n");
+        return true;
+    }
+
+    private static void generateGraphColoring(int vertexes, String filename) throws IOException {
+        if ((vertexes - 1) % 3 == 0) {
+            System.err.println("Количество вершин V != 3n + 1, где n>=1.");
             return;
         }
-        System.out.println("Раскраска совпала.");
-        System.out.println(edgeNumber);
-        System.out.println(firstVertexNumber + " " + secondVertexNumber);
-        System.out.println(firstNumber + " " + secondNumber);
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(vertexes).append(" ").append(vertexes).append(System.lineSeparator()); // first string
+        for (int i = 0; i < vertexes - 1; i++) {
+            stringBuilder.append(i).append(" ").append(i + 1).append(System.lineSeparator());
+        }
+        stringBuilder.append(vertexes - 1).append(" ").append(0).append(System.lineSeparator());
+
+        for (int i = 0; i < vertexes - 1; i++) {
+            String currentColor = "R,";
+            switch (i % 3) {
+                case 1 -> currentColor = "B,";
+                case 2 -> currentColor = "Y,";
+            }
+            stringBuilder.append(currentColor);
+        }
+
+        String currentColor = "R";
+        switch ((vertexes - 1) % 3) {
+            case 1 -> currentColor = "B";
+            case 2 -> currentColor = "Y";
+        }
+        stringBuilder.append(currentColor);
+        //System.out.println(stringBuilder);
+
+        // Записываем граф в файл
+        BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+        writer.write(stringBuilder.toString());
+        writer.close();
+    }
+
+    public static void main(String[] args) throws Exception {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.print("Введите число а(кол-во итераций): ");
+        int countOfIterations = Integer.parseInt(bufferedReader.readLine());
+        bufferedReader.close();
+
+        String filename = "test1.txt";
+        generateGraphColoring(5, filename);
+        //readGraphFromFile("Solution.txt");
+        readGraphFromFile(filename);
+
+        for (int i = 0; i < countOfIterations; i++) {
+            System.out.println("****************");
+            System.out.println("* Итерация #" + i + " *");
+            System.out.println("****************");
+
+            // Рандомим последовательность проверки рёбер
+            sequenceOfBobChecking = new int[E];
+            fillArrayByIndexes(sequenceOfBobChecking);
+            shuffleArray(sequenceOfBobChecking);
+
+            // Проверяем рёбра
+            for (int k : sequenceOfBobChecking) {
+                // Step 1
+                fillArrayByIndexes(shuffleArray);
+                shuffleArray(shuffleArray);
+                shuffleGraphColors();
+
+                // Step 3, 2, 4
+                generateDataRSA();
+
+                // Step 5
+                if (!verifyEdge(k)) {
+                    return;
+                }
+            }
+        }
     }
 }

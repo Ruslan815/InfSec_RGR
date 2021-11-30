@@ -251,7 +251,7 @@ public class GraphColoring {
                 // Step 5
                 int k = ThreadLocalRandom.current().nextInt(0, E);
                 if (!verifyEdge(k)) {
-                    break;
+                    return;
                 }
                 //}
             }

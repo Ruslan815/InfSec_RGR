@@ -179,7 +179,7 @@ public class GraphColoring {
     private static void generateGraphColoring(int vertexes, String filename) throws IOException {
         if ((vertexes - 1) % 3 == 0) {
             System.err.println("Количество вершин V != 3n + 1, где n>=1.");
-            return;
+            throw new IllegalArgumentException();
         }
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -214,27 +214,32 @@ public class GraphColoring {
 
     public static void main(String[] args) throws Exception {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.print("Введите число а(кол-во итераций): ");
-        int countOfIterations = Integer.parseInt(bufferedReader.readLine());
-        bufferedReader.close();
+        int countOfVertexes = 0;
+        String filename = "";
 
-        String filename = "test1.txt";
-        generateGraphColoring(5, filename);
-        //readGraphFromFile("Solution.txt");
-        readGraphFromFile(filename);
+        while (true) {
+            System.out.print("Введите количество вершин V в графе (V != 3n + 1, где n>=1): ");
+            countOfVertexes = Integer.parseInt(bufferedReader.readLine());
 
-        for (int i = 0; i < countOfIterations; i++) {
-            System.out.println("****************");
-            System.out.println("* Итерация #" + i + " *");
-            System.out.println("****************");
+            System.out.print("Введите имя файла для сохранения раскраски графа: ");
+            filename = bufferedReader.readLine();
+            generateGraphColoring(countOfVertexes, filename);
+            readGraphFromFile(filename); //readGraphFromFile("Solution.txt");
 
-            // Рандомим последовательность проверки рёбер
-            // sequenceOfBobChecking = new int[E];
-            // fillArrayByIndexes(sequenceOfBobChecking);
-            // shuffleArray(sequenceOfBobChecking);
+            System.out.print("\nВведите число а (кол-во итераций): ");
+            int countOfIterations = Integer.parseInt(bufferedReader.readLine());
+            for (int i = 0; i < countOfIterations; i++) {
+                System.out.println("****************");
+                System.out.println("* Итерация #" + i + " *");
+                System.out.println("****************");
 
-            // Проверяем рёбра
-            //for (int k : sequenceOfBobChecking) {
+                // Рандомим последовательность проверки рёбер
+                // sequenceOfBobChecking = new int[E];
+                // fillArrayByIndexes(sequenceOfBobChecking);
+                // shuffleArray(sequenceOfBobChecking);
+
+                // Проверяем рёбра
+                //for (int k : sequenceOfBobChecking) {
                 // Step 1
                 fillArrayByIndexes(shuffleArray);
                 shuffleArray(shuffleArray);
@@ -246,9 +251,18 @@ public class GraphColoring {
                 // Step 5
                 int k = ThreadLocalRandom.current().nextInt(0, E);
                 if (!verifyEdge(k)) {
-                    return;
+                    break;
                 }
-            //}
+                //}
+            }
+
+            System.out.println("Выйти из программы? (y/n): ");
+            if (bufferedReader.readLine().equals("y")) break;
         }
+
+        System.out.println("********************************");
+        System.out.println("* Завершение работы программы. *");
+        System.out.println("********************************");
+        bufferedReader.close();
     }
 }
